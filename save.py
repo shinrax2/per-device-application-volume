@@ -16,9 +16,10 @@ def run():
                 save = json.loads(f.read())
             except json.decoder.JSONDecodeError:
                 save = {
-                    "applications" : {} 
+                    "applications" : {},
+                    "last_default_sink" : pa_client.server_info().default_sink_name
                 }
-
+    save["last_default_sink"] = pa_client.server_info().default_sink_name
     for sink in pa_client.sink_input_list():
         vol = pa_client.volume_get_all_chans(sink)
         try:

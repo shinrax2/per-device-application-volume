@@ -14,25 +14,31 @@ def run(mute=False):
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
     
-    save = {
-        "applications" : {} 
-    }
     SAVE_FILE = "save.json"
     pa_client = pulsectl.Pulse("per-device-application-volume")
     default_sink_input = pa_client.server_info().default_sink_name
+    save = {
+        "applications" : {},
+        "last_default_sink" : default_sink_input
+    }
     if os.path.exists(SAVE_FILE) == True:
-        with open(SAVE_FILE, "r") as f:
+        with open(SAVE_FILE, "r", encoding="utf8") as f:
             save = json.loads(f.read())
 
     for sink in pa_client.sink_input_list():
         try:
             vol = save["applications"][sink.proplist["application.name"]]["volumes"][default_sink_input]
-            pa_client.volume_set_all_chans(sink, vol)
+            if pa_client.volume_get_all_chans(sink) != vol and save["last_default_sink"] != default_sink_input:
+                pa_client.volume_set_all_chans(sink, vol)
             if mute == False:
                 print(f"volume for application '{sink.proplist["application.name"]}' on device '{default_sink_input}' set to {vol*100}%!")
         except KeyError:
             if mute == False:
                 print(f"no volume for application '{sink.proplist["application.name"]}' on device '{default_sink_input}' set!")
+    if save["last_default_sink"] != default_sink_input:
+        save["last_default_sink"] = default_sink_input
+        with open(SAVE_FILE, "w", encoding="utf8") as f:
+            f.write(json.dumps(save, indent=4, ensure_ascii=False))
     pa_client.close()
 
 if __name__ == '__main__':

@@ -4,6 +4,7 @@ import apply
 import signal
 import sys
 import os
+import time
 
 os.chdir(os.path.dirname(__file__))
 
@@ -23,3 +24,4 @@ with pulsectl.Pulse("per-device-application-volume_listener") as pulse:
   pulse.event_callback_set(event_handler)
   while True:
     pulse.event_listen()
+    time.sleep(0.1)
