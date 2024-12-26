@@ -2,6 +2,8 @@ import pulsectl
 import os
 import json
 
+os.chdir(os.path.dirname(__file__))
+
 def run():
     SAVE_FILE = "save.json"
 

@@ -4,7 +4,9 @@ import json
 import signal
 import sys
 
-def run():
+os.chdir(os.path.dirname(__file__))
+
+def run(mute=False):
     def signal_handler(sig, frame):
         print('exiting!')
         sys.exit(0)
@@ -26,9 +28,11 @@ def run():
         try:
             vol = save["applications"][sink.proplist["application.name"]]["volumes"][default_sink_input]
             pa_client.volume_set_all_chans(sink, vol)
-            print(f"volume for application '{sink.proplist["application.name"]}' on device '{default_sink_input}' set to {vol*100}%!")
+            if mute == False:
+                print(f"volume for application '{sink.proplist["application.name"]}' on device '{default_sink_input}' set to {vol*100}%!")
         except KeyError:
-            print(f"no volume for application '{sink.proplist["application.name"]}' on device '{default_sink_input}' set!")
+            if mute == False:
+                print(f"no volume for application '{sink.proplist["application.name"]}' on device '{default_sink_input}' set!")
     pa_client.close()
 
 if __name__ == '__main__':
