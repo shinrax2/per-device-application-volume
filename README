@@ -1,0 +1,28 @@
+Per Device Application Volume
+
+small userspace daemon to automatically change application volume based on default output device
+
+requirements:
+
+python
+pulsectl
+pipewire-pulse OR pulseaudio
+systemd (optional, only for the daemon part)
+
+installtion:
+
+git clone https://github.com/shinrax2/per-device-application-volume
+cd per-device-application-volume
+sed 's#/home/shinrax2/GitHub/per-device-application-volume#'`pwd`'#' pdav.service
+sudo ln pdav.service /etc/systemd/user/pdav.service
+systemctl --user daemon-reload
+systemctl --user --now enable pdav.service
+
+usage:
+
+configure your application volume like you normally would and have the volume saved based on default output device
+when changing default output device PDAV will automatically adjust the volume
+
+reasoning:
+sometimes i play games over my speakers, sometimes over headphones when also on a voice call
+this removes the need to manually adjust this every time
