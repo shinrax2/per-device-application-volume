@@ -28,7 +28,8 @@ package() {
 
 post_install() {
     systemctl --user daemon-reload
-    systemctl --user --now enable pdav.service
+    echo "to use pdav you need to enable it yourself with the following command"
+    echo "systemctl --user --now enable pdav.service"
 }
 
 pre_remove() {
