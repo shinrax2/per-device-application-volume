@@ -1,10 +1,10 @@
 Per Device Application Volume
 
-small userspace daemon to automatically change application volume based on default output device
+small user daemon to automatically change application volume based on default output device
 
 requirements:
 
-python
+python3
 pulsectl
 pipewire-pulse OR pulseaudio
 systemd (optional, only for the daemon part)
