@@ -1,7 +1,7 @@
 # Maintainer: shinrax2
 _pkgname=per-device-application-volume
 pkgname=pdav-git
-pkgver=0.0.1_475a4ac
+pkgver=0.0.1_b2001a1
 pkgrel=1
 pkgdesc="user daemon to automatically save and restore application volume settings based on default output device for pulseaudio/pipewire-pulse"
 arch=(any)
@@ -13,7 +13,8 @@ md5sums=('SKIP')
 
 pkgver() {
     cd $_pkgname
-    printf "0.0.1_%s" "$(git  rev-parse --short HEAD)"
+    git describe --long --tags | sed 's/\([^-]*-g\)/r\1/;s/-/./g;s/^v//g'
+
 }
 
 package() {
