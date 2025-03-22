@@ -5,7 +5,7 @@ Description=Per Device Application Volume
 ExecStart=/usr/bin/python /usr/bin/pdav
 Environment=PYTHONUNBUFFERED=1
 Restart=on-failure
-Type=notify
+Type=simple
 
 [Install]
 WantedBy=default.target
