@@ -80,7 +80,8 @@ def main():
     with pulsectl.Pulse("per-device-application-volume_listener") as pulse:
         def event_handler(ev):
             with concurrent.futures.ProcessPoolExecutor() as executor:
-                executor.submit(run())
+                f = executor.submit(run())
+                f.result()
             raise pulsectl.PulseLoopStop
 
         pulse.event_mask_set('sink_input')
