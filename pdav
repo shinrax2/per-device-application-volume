@@ -42,20 +42,6 @@ def run():
                 save = json.loads(f.read())
             except json.JSONDecodeError:
                 print(f"cant parse json save file '{SAVE_FILE}'")
-    if save["last_default_sink"] != default_sink_input:
-        for sink in pa_client.sink_input_list():
-            vol = pa_client.volume_get_all_chans(sink)
-            try:
-                save["applications"][ident(sink.proplist)]["volumes"][default_sink_input] = vol
-                save["applications"][ident(sink.proplist)]["application.name"] = sink.proplist["application.name"]
-                save["applications"][ident(sink.proplist)]["application.process.binary"] = sink.proplist["application.process.binary"]
-            except KeyError:
-                # no data for application
-                save["applications"][ident(sink.proplist)] = {
-                    "volumes": {default_sink_input : vol},
-                    "application.name" : sink.proplist["application.name"],
-                    "application.process.binary" : sink.proplist["application.process.binary"]
-                    }
             
     for sink in pa_client.sink_input_list():
         try:
@@ -65,6 +51,21 @@ def run():
                 print(f"volume for application '{sink.proplist["application.name"]}' on device '{default_sink_input}' set to {vol*100}%!")
         except KeyError:
             print(f"no volume for application '{sink.proplist["application.name"]}' on device '{default_sink_input}' set!")
+    
+    for sink in pa_client.sink_input_list():
+        vol = pa_client.volume_get_all_chans(sink)
+        try:
+            save["applications"][ident(sink.proplist)]["volumes"][default_sink_input] = vol
+            save["applications"][ident(sink.proplist)]["application.name"] = sink.proplist["application.name"]
+            save["applications"][ident(sink.proplist)]["application.process.binary"] = sink.proplist["application.process.binary"]
+        except KeyError:
+            # no data for application
+            save["applications"][ident(sink.proplist)] = {
+                "volumes": {default_sink_input : vol},
+                "application.name" : sink.proplist["application.name"],
+                "application.process.binary" : sink.proplist["application.process.binary"]
+                }
+    
     save["last_default_sink"] = default_sink_input
     with open(SAVE_FILE, "w", encoding="utf8") as f:
         f.write(json.dumps(save, indent=4, ensure_ascii=False))
