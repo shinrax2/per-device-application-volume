@@ -42,21 +42,21 @@ def run():
                 save = json.loads(f.read())
             except json.JSONDecodeError:
                 print(f"cant parse json save file '{SAVE_FILE}'")
-        
-    for sink in pa_client.sink_input_list():
-        vol = pa_client.volume_get_all_chans(sink)
-        try:
-            save["applications"][ident(sink.proplist)]["volumes"][default_sink_input] = vol
-            save["applications"][ident(sink.proplist)]["application.name"] = sink.proplist["application.name"]
-            save["applications"][ident(sink.proplist)]["application.process.binary"] = sink.proplist["application.process.binary"]
-        except KeyError:
-          # no data for application
-          save["applications"][ident(sink.proplist)] = {
-            "volumes": {default_sink_input : vol},
-            "application.name" : sink.proplist["application.name"],
-            "application.process.binary" : sink.proplist["application.process.binary"]
-            }
-    
+    if save["last_default_sink"] != default_sink_input:
+        for sink in pa_client.sink_input_list():
+            vol = pa_client.volume_get_all_chans(sink)
+            try:
+                save["applications"][ident(sink.proplist)]["volumes"][default_sink_input] = vol
+                save["applications"][ident(sink.proplist)]["application.name"] = sink.proplist["application.name"]
+                save["applications"][ident(sink.proplist)]["application.process.binary"] = sink.proplist["application.process.binary"]
+            except KeyError:
+                # no data for application
+                save["applications"][ident(sink.proplist)] = {
+                    "volumes": {default_sink_input : vol},
+                    "application.name" : sink.proplist["application.name"],
+                    "application.process.binary" : sink.proplist["application.process.binary"]
+                    }
+            
     for sink in pa_client.sink_input_list():
         try:
             vol = save["applications"][ident(sink.proplist)]["volumes"][default_sink_input]
