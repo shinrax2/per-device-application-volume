@@ -1,0 +1,104 @@
+#!/usr/bin/env python3
+
+# stdlib imports
+import signal
+import sys
+import subprocess
+import os
+
+# pip package imports
+import FreeSimpleGUI as sg # pip:FreeSimpleGui
+import pulsectl # pip:pulsectl
+
+def _signal_handler(sig, frame):
+        sys.exit(0)
+
+def call(cmd):
+    return subprocess.Popen(cmd, stdout=subprocess.PIPE).communicate()[0].decode("utf8")
+
+class PDAVGui():
+    __VERSION__ = "0.1.0"
+    __CALLS__ = {
+        "status" : ["systemctl", "--user", "status", "pdav.service"],
+        "reload" : ["systemctl", "--user", "daemon-reload"],
+        "restart"  : ["systemctl", "--user", "--now", "restart", "pdav.service"],
+        "start"  : ["systemctl", "--user", "--now", "enable", "pdav.service"],
+        "stop"  : ["systemctl", "--user", "--now", "disable", "pdav.service"]
+    }
+
+    def __init__(self):
+        # setup signal handlers
+        signal.signal(signal.SIGINT, _signal_handler)
+        signal.signal(signal.SIGTERM, _signal_handler)
+
+        self._is_user_service_installed = os.path.exists("/etc/systemd/user/pdav.service")
+
+    def _main_menu(self):
+        layout = [  # layout for main menu
+            [sg.Button("Manage systemd user service", key="user_service")],
+            [sg.Button("Exit", key="Exit")]
+        ]
+        self.mainmenu = sg.Window(f"PDAV Gui {self.__VERSION__}", layout, finalize=True)
+        while True:
+            event, value = self.mainmenu.read()
+            if event == "Exit":
+                break
+            if event in (None, "Exit"):
+                break
+            if event == "user_service":
+                self.mainmenu.hide()
+                self._user_service_menu()
+                self.mainmenu.UnHide()
+        self.mainmenu.close()
+    
+    def _user_service_menu(self):
+        layout = [
+            [sg.Text(f"PDAV systemd user service installed: {"YES" if self._is_user_service_installed == True else "NO"}")],
+            [
+                sg.Button("Start service", key="start_service"),
+                sg.Button("Stop service", key="stop_service"),
+                sg.Button("Restart service", key="restart_service"),
+                sg.Button("Refresh status", key="refresh_service")
+            ],
+            [sg.Output(size=(80, 20), key="Out")],
+            [sg.Button("Exit", key="Exit")]
+        ]
+        self.userservicemenu = sg.Window(f"PDAV Gui :: systemd user service", layout, finalize=True)
+        self.userservicemenu["refresh_service"].Update(disabled=(self._is_user_service_installed == False))
+        self.userservicemenu["restart_service"].Update(disabled=(self._is_user_service_installed == False))
+        self.userservicemenu["start_service"].Update(disabled=(self._is_user_service_installed == False))
+        self.userservicemenu["stop_service"].Update(disabled=(self._is_user_service_installed == False))
+        while True:
+            if self._is_user_service_installed == True:
+                print("PDAV systemd user service status:\n")
+                print(call(self.__CALLS__["status"]))
+            event, value = self.userservicemenu.read()
+            if event == "Exit":
+                self.userservicemenu.close()
+                break
+            if event in (None, "Exit"):
+                self.userservicemenu.close()
+                break
+            if event == "refresh_service":
+                self.userservicemenu["Out"].Update("")
+                print("PDAV systemd user service status:\n")
+                print(call(self.__CALLS__["status"]))
+            if event == "start_service":
+                self.userservicemenu["Out"].Update("")
+                print("PDAV systemd user service starting:\n")
+                print(call(self.__CALLS__["reload"]))
+                print(call(self.__CALLS__["start"]))
+            if event == "restart_service":
+                self.userservicemenu["Out"].Update("")
+                print("PDAV systemd user service restarting:\n")
+                print(call(self.__CALLS__["reload"]))
+                print(call(self.__CALLS__["restart"]))
+            if event == "stop_service":
+                self.userservicemenu["Out"].Update("")
+                print("PDAV systemd user service stopping:\n")
+                print(call(self.__CALLS__["stop"]))
+
+
+
+if __name__ == "__main__":
+    PDAVGui()._main_menu()
