@@ -2,7 +2,7 @@
 Description=Per Device Application Volume
 
 [Service]
-ExecStart=/usr/bin/python /usr/bin/pdav
+ExecStart=/usr/bin/python3 /usr/bin/pdav
 Environment=PYTHONUNBUFFERED=1
 Restart=on-failure
 Type=simple

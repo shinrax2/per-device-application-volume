@@ -4,7 +4,7 @@ small user daemon to automatically change application volume based on default ou
 
 installtion (arch linux): use yay or any other AUR helper of your choice
 
-yay -S aur/pdav-git
+yay -S aur/pdav
 
 usage:
 

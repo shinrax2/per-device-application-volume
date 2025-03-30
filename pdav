@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-import pulsectl
+
+# stdlib imports
 import concurrent.futures
 import signal
 import sys
@@ -8,14 +9,18 @@ import time
 import hashlib
 import json
 
+# pip package imports
+import pulsectl # pip:pulsectl
+
 __VERSION__  = "0.0.3"
 
 def get_save_file():
     try:
         if os.path.exists(os.environ["PDAV_CONFIG_FILE"]):
+            print(f"[PDAV] using config file 'PDAV_CONFIG_FILE' ({os.environ["PDAV_CONFIG_FILE"]})")
             return os.environ["PDAV_CONFIG_FILE"]
         else:
-            print(f"file supplied in 'PDAV_CONFIG_FILE' ({os.environ["PDAV_CONFIG_FILE"]}) does not exist")
+            print(f"[PDAV] file supplied in 'PDAV_CONFIG_FILE' ({os.environ["PDAV_CONFIG_FILE"]}) does not exist")
     except KeyError:
         pass
     filename = "pdav-config.json"
@@ -28,30 +33,37 @@ def ident(proplist):
         ident.update(proplist["application.process.binary"].encode("utf-8"))
         return ident.hexdigest(16)
 
-def run():    
-    global SAVE_FILE
+def run():
     pa_client = pulsectl.Pulse("per-device-application-volume")
     default_sink_input = pa_client.server_info().default_sink_name
+
+    # get save file location
+    SAVE_FILE = get_save_file()
+
+    # default empty save & config
     save = {
         "applications" : {},
         "last_default_sink" : default_sink_input
     }
+
+    # parse pdav-config.json if possible and overwrite default save
     if os.path.exists(SAVE_FILE) == True:
         with open(SAVE_FILE, "r", encoding="utf8") as f:
             try:
                 save = json.loads(f.read())
             except json.JSONDecodeError:
-                print(f"cant parse json save file '{SAVE_FILE}'")
-            
+                print(f"[PDAV] cant parse json save file '{SAVE_FILE}'")
+
+    # apply volume if default sink changed and application volume =! set volume 
     for sink in pa_client.sink_input_list():
         try:
             vol = save["applications"][ident(sink.proplist)]["volumes"][default_sink_input]
             if pa_client.volume_get_all_chans(sink) != vol and save["last_default_sink"] != default_sink_input:
                 pa_client.volume_set_all_chans(sink, vol)
-                print(f"volume for application '{sink.proplist["application.name"]}' on device '{default_sink_input}' set to {vol*100}%!")
+                print(f"[PDAV] volume for application '{sink.proplist["application.name"]}' on device '{default_sink_input}' set to {vol*100}%!")
         except KeyError:
-            print(f"no volume for application '{sink.proplist["application.name"]}' on device '{default_sink_input}' set!")
-    
+            print(f"[PDAV] no volume for application '{sink.proplist["application.name"]}' on device '{default_sink_input}' set!")
+    # read application volume on current default sink and add it to save
     for sink in pa_client.sink_input_list():
         vol = pa_client.volume_get_all_chans(sink)
         try:
@@ -65,34 +77,44 @@ def run():
                 "application.name" : sink.proplist["application.name"],
                 "application.process.binary" : sink.proplist["application.process.binary"]
                 }
-    
+
     save["last_default_sink"] = default_sink_input
+
+    # write save to disk
     with open(SAVE_FILE, "w", encoding="utf8") as f:
-        f.write(json.dumps(save, indent=4, ensure_ascii=False))
+                f.write(json.dumps(save, indent=4, ensure_ascii=False))
+
     pa_client.close()
 
 def signal_handler(sig, frame):
     sys.exit(0)
 
+def event_handler(ev):
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        executor.submit(run())
+    raise pulsectl.PulseLoopStop
+
 def main():
+    # setup signal handlers
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
 
-    with pulsectl.Pulse("per-device-application-volume_listener") as pulse:
-        def event_handler(ev):
-            with concurrent.futures.ProcessPoolExecutor() as executor:
-                executor.submit(run())
-            raise pulsectl.PulseLoopStop
+    # get save file location
+    SAVE_FILE = get_save_file()
 
+    # print header
+    print(f"[PDAV] PDAV version {__VERSION__}")
+    print("[PDAV] this tool is in an very early version, please report any issues you encounter to https://github.com/shinrax2/per-device-application-volume")
+    print(f"[PDAV] save file: {os.path.abspath(SAVE_FILE)}")
+
+    with pulsectl.Pulse("per-device-application-volume_listener") as pulse:
+        # setup pulsectl event settings
         pulse.event_mask_set('sink_input')
         pulse.event_callback_set(event_handler)
+        # run main loop
         while True:
             pulse.event_listen()
             time.sleep(0.1)
 
 if __name__ == "__main__":
-    SAVE_FILE = get_save_file()
-    print(f"PDAV version {__VERSION__}")
-    print("this tool is in an very early version, please report any issues you encounter to \n https://github.com/shinrax2/per-device-application-volume")
-    print(f"save file: {os.path.abspath(SAVE_FILE)}")
     main()
