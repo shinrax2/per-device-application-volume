@@ -1,0 +1,21 @@
+[
+    {
+        "id" : 0,
+        "name" : "vlc_version_rename",
+        "condition_type" : "OR",
+        "conditions" : [
+            {
+                "type" : "match",
+                "target" : "application.process.binary",
+                "data" : "vlc"
+            }
+        ],
+        "execute" : [
+            {
+                "type" : "replace",
+                "target" : "application.name",
+                "data" : "VLC media player (LibVLC)"
+            }
+        ]
+    }
+]

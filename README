@@ -11,6 +11,10 @@ usage:
 configure your application volume like you normally would and have the volume saved based on default output device
 when changing default output device PDAV will automatically adjust the volume
 
+ENVIORMENT variables:
+PDAV_CONFIG_FILE=/path/to/your/pdav-config.json
+PDAV_QUIRKS_FILE=/path/to/your/quirks.json
+
 reasoning:
 sometimes i play games over my speakers, sometimes over headphones when also on a voice call
 this removes the need to manually adjust this every time
