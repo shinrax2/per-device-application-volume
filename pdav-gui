@@ -35,8 +35,8 @@ class PDAVGui():
 
     def _main_menu(self):
         layout = [  # layout for main menu
-            [sg.Button("Manage systemd user service", key="user_service")],
-            [sg.Button("Exit", key="Exit")]
+            [sg.Button("Manage systemd user service", key="user_service", size=(25, 2))],
+            [sg.Button("Exit", key="Exit", size=(25, 2))]
         ]
         self.mainmenu = sg.Window(f"PDAV Gui {self.__VERSION__}", layout, finalize=True)
         while True:
@@ -55,13 +55,13 @@ class PDAVGui():
         layout = [
             [sg.Text(f"PDAV systemd user service installed: {"YES" if self._is_user_service_installed == True else "NO"}")],
             [
-                sg.Button("Start service", key="start_service"),
-                sg.Button("Stop service", key="stop_service"),
-                sg.Button("Restart service", key="restart_service"),
-                sg.Button("Refresh status", key="refresh_service")
+                sg.Button("Start service", key="start_service", size=(15, 1)),
+                sg.Button("Stop service", key="stop_service", size=(15, 1)),
+                sg.Button("Restart service", key="restart_service", size=(15, 1)),
+                sg.Button("Refresh status", key="refresh_service", size=(15, 1))
             ],
             [sg.Output(size=(80, 20), key="Out")],
-            [sg.Button("Exit", key="Exit")]
+            [sg.Button("Exit", key="Exit", size=(15, 1))]
         ]
         self.userservicemenu = sg.Window(f"PDAV Gui :: systemd user service", layout, finalize=True)
         self.userservicemenu["refresh_service"].Update(disabled=(self._is_user_service_installed == False))
