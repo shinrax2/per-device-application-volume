@@ -109,6 +109,10 @@ def run():
     # default empty save & config
     save = {
         "applications" : {},
+        "ignores" : {
+            "devies" : [],
+            "applications": {}
+        },
         "last_default_sink" : default_sink_input
     }
 
@@ -119,10 +123,20 @@ def run():
                 save = json.loads(f.read())
             except json.JSONDecodeError:
                 print(f"[PDAV] cant parse json save file '{SAVE_FILE}'")
+    try:
+        save["ignores"]
+    except KeyError:
+        save["ignores"] = {}
 
     # apply volume if default sink changed and application volume =! set volume 
     for sink in pa_client.sink_input_list():
         proplist = apply_quirks(sink.proplist)
+        # check for application ignores
+        try:
+            if ident(proplist) in save["ignores"]["applications"].keys():
+                break
+        except KeyError:
+            save["ignores"]["applications"] = {}
         try:
             vol = save["applications"][ident(proplist)]["volumes"][default_sink_input]
             if pa_client.volume_get_all_chans(sink) != vol and save["last_default_sink"] != default_sink_input:
@@ -130,9 +144,23 @@ def run():
                 print(f"[PDAV] volume for application '{proplist["application.name"]}' on device '{default_sink_input}' set to {vol*100}%!")
         except KeyError:
             print(f"[PDAV] no volume for application '{proplist["application.name"]}' on device '{default_sink_input}' set!")
+    # check for device ignores
+    try:
+        if default_sink_input in save["ignores"]["devices"]:
+            return
+    except KeyError:
+        save["ignores"]["devices"] = []
+    
     # read application volume on current default sink and add it to save
     for sink in pa_client.sink_input_list():
         proplist = apply_quirks(sink.proplist)
+        # check for application ignores
+        try:
+            if ident(proplist) in save["ignores"]["applications"].keys():
+                break
+        except KeyError:
+            save["ignores"]["applications"] = {}
+        
         vol = pa_client.volume_get_all_chans(sink)
         try:
             save["applications"][ident(proplist)]["volumes"][default_sink_input] = vol

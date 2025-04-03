@@ -1,3 +1,7 @@
+future release:
+add pdav-gui to ease configuration of user service, etc
+implement ignore system for applications & devices
+
 0.1.0:
 implement quirks system
 
