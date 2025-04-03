@@ -129,6 +129,33 @@ class PDAVGui():
         }
 
         self._is_user_service_installed = os.path.exists("/etc/systemd/user/pdav.service")
+    
+    def load_save(self):
+        default_sink_input = self.pa_client.server_info().default_sink_name
+        # default empty save & config
+        save = self.default_save
+        # parse pdav-config.json if possible and overwrite default save
+        if os.path.exists(self.save_file) == True:
+            with open(self.save_file, "r", encoding="utf8") as f:
+                try:
+                    save = json.loads(f.read())
+                except json.JSONDecodeError:
+                    print(f"[PDAV] cant parse json save file '{self.save_file}'")
+        try:
+            save["ignores"]
+        except KeyError:
+            save["ignores"] = {}
+        try:
+            save["ignores"]["devices"]
+        except KeyError:
+            save["ignores"]["devices"] = []
+        try:
+            save["ignores"]["applications"]
+        except KeyError:
+            save["ignores"]["applications"] = {}
+        
+        return save
+        
 
     def _main_menu(self):
         layout = [
@@ -152,6 +179,11 @@ class PDAVGui():
                 self.mainmenu.hide()
                 self._device_ignores_menu()
                 self.mainmenu.UnHide()
+            if event == "app_ignores":
+                self.mainmenu.hide()
+                self._application_ignores_menu()
+                self.mainmenu.UnHide()
+
         self.mainmenu.close()
     
     def _user_service_menu(self):
@@ -210,25 +242,7 @@ class PDAVGui():
                 print(call(self.__CALLS__["status"]))
 
     def _device_ignores_menu(self):
-        default_sink_input = self.pa_client.server_info().default_sink_name
-        # default empty save & config
-        save = self.default_save
-        # parse pdav-config.json if possible and overwrite default save
-        if os.path.exists(self.save_file) == True:
-            with open(self.save_file, "r", encoding="utf8") as f:
-                try:
-                    save = json.loads(f.read())
-                except json.JSONDecodeError:
-                    print(f"[PDAV] cant parse json save file '{self.save_file}'")
-        try:
-            save["ignores"]
-        except KeyError:
-            save["ignores"] = {}
-        try:
-            save["ignores"]["devices"]
-        except KeyError:
-            save["ignores"]["devices"] = []
-        
+        save = self.load_save()
         layout = [
             [sg.Text("", key="status")],
             [sg.Text("Ignored Devices:")]
@@ -252,12 +266,64 @@ class PDAVGui():
                 break
             if event == "save":
                 # write save to disk
+                new_dev = []
                 for key in keys:
                     if value[key] == True and key[11:] not in save["ignores"]["devices"]:
-                        save["ignores"]["devices"].append(key[11:])
+                        new_dev.append(key[11:])
+                save["ignores"]["devices"] = new_dev
                 with open(self.save_file, "w", encoding="utf8") as f:
                     f.write(json.dumps(save, indent=4, ensure_ascii=False))
                 self.deviceignoresmenu["status"].Update("Device ignores saved!")
+    
+    def _application_ignores_menu(self):
+        run = True
+        while run == True:
+            save = self.load_save()
+            layout = [
+                [sg.Text("", key="status")],
+                [sg.Text("Only Applications currently outputting audio or already on the application ignore list can be managed!")],
+                [sg.Button("Refresh applications", key="refresh_applications"), sg.Button("Save device ignores", key="save", size=(15, 1)), sg.Button("Exit", key="Exit", size=(15, 1))],
+                [sg.Text("Application ignores:")]
+            ]
+            keys = {}
+            for k, v in save["ignores"]["applications"].items():
+                layout.append([sg.Checkbox("", default=True, key=f"app_ignore_{k}", enable_events=True), sg.Text(f"{v["application.name"]} ({v["application.process.binary"]})")])
+                keys[f"app_ignore_{k}"] = v
+            for sink in self.pa_client.sink_input_list():
+                proplist = apply_quirks(sink.proplist)
+                k = ident(proplist)
+                if k not in save["ignores"]["applications"].keys():
+                    layout.append([sg.Checkbox("", default=False, key=f"app_ignore_{k}", enable_events=True), sg.Text(f"{proplist["application.name"]} ({proplist["application.process.binary"]})")])
+                    keys[f"app_ignore_{k}"] = {
+                        "application.name" : proplist["application.name"],
+                        "application.process.binary" : proplist["application.process.binary"]
+                    }
+            self.applicationignoresmenu = sg.Window(f"PDAV Gui :: application ignores", layout, finalize=True)
+            while True:
+                event, value = self.applicationignoresmenu.read()
+                self.applicationignoresmenu["status"].Update("")
+                if event == "refresh_applications":
+                    self.applicationignoresmenu.close()
+                    break
+                if event == "Exit":
+                    run = False
+                    self.applicationignoresmenu.close()
+                    break
+                if event in (None, "Exit"):
+                    run = False
+                    self.applicationignoresmenu.close()
+                    break
+                if event == "save":
+                    new_app = {}
+                    for k, v in keys.items():
+                        if value[k] == True:
+                            new_app[k[11:]] = v
+                    save["ignores"]["applications"] = new_app
+                    # write save to disk
+                    with open(self.save_file, "w", encoding="utf8") as f:
+                        f.write(json.dumps(save, indent=4, ensure_ascii=False))
+                    self.applicationignoresmenu["status"].Update("Application ignores saved!")
+
 
 if __name__ == "__main__":
     PDAVGui()._main_menu()

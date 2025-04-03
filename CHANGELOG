@@ -1,5 +1,5 @@
 future release:
-add pdav-gui to ease configuration of user service, etc
+add pdav-gui to ease configuration of user service, ignores, etc
 implement ignore system for applications & devices
 
 0.1.0:
