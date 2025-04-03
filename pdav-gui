@@ -118,7 +118,6 @@ class PDAVGui():
         signal.signal(signal.SIGTERM, _signal_handler)
         self.pa_client = pulsectl.Pulse("pdav-gui")
         self.save_file = get_save_file()
-        self.quirks_file = get_quirks_file()
         self.default_save = {
             "applications" : {},
             "ignores" : {

@@ -131,19 +131,22 @@ def run():
     # apply volume if default sink changed and application volume =! set volume 
     for sink in pa_client.sink_input_list():
         proplist = apply_quirks(sink.proplist)
+        k = ident(proplist)
+        skip = False
         # check for application ignores
         try:
-            if ident(proplist) in save["ignores"]["applications"].keys():
-                break
+            if k in save["ignores"]["applications"].keys():
+                skip = True
         except KeyError:
             save["ignores"]["applications"] = {}
-        try:
-            vol = save["applications"][ident(proplist)]["volumes"][default_sink_input]
-            if pa_client.volume_get_all_chans(sink) != vol and save["last_default_sink"] != default_sink_input:
-                pa_client.volume_set_all_chans(sink, vol)
-                print(f"[PDAV] volume for application '{proplist["application.name"]}' on device '{default_sink_input}' set to {vol*100}%!")
-        except KeyError:
-            print(f"[PDAV] no volume for application '{proplist["application.name"]}' on device '{default_sink_input}' set!")
+        if skip == False:
+            try:
+                vol = save["applications"][k]["volumes"][default_sink_input]
+                if pa_client.volume_get_all_chans(sink) != vol and save["last_default_sink"] != default_sink_input:
+                    pa_client.volume_set_all_chans(sink, vol)
+                    print(f"[PDAV] volume for application '{proplist["application.name"]}' on device '{default_sink_input}' set to {vol*100}%!")
+            except KeyError:
+                print(f"[PDAV] no volume for application '{proplist["application.name"]}' on device '{default_sink_input}' set!")
     # check for device ignores
     try:
         if default_sink_input in save["ignores"]["devices"]:
@@ -154,25 +157,27 @@ def run():
     # read application volume on current default sink and add it to save
     for sink in pa_client.sink_input_list():
         proplist = apply_quirks(sink.proplist)
+        k = ident(proplist)
+        skip = False
         # check for application ignores
         try:
-            if ident(proplist) in save["ignores"]["applications"].keys():
-                break
+            if k in save["ignores"]["applications"].keys():
+                skip = True
         except KeyError:
             save["ignores"]["applications"] = {}
-        
-        vol = pa_client.volume_get_all_chans(sink)
-        try:
-            save["applications"][ident(proplist)]["volumes"][default_sink_input] = vol
-            save["applications"][ident(proplist)]["application.name"] = proplist["application.name"]
-            save["applications"][ident(proplist)]["application.process.binary"] = proplist["application.process.binary"]
-        except KeyError:
-            # no data for application
-            save["applications"][ident(proplist)] = {
-                "volumes": {default_sink_input : vol},
-                "application.name" : proplist["application.name"],
-                "application.process.binary" : proplist["application.process.binary"]
-                }
+        if skip == False:
+            vol = pa_client.volume_get_all_chans(sink)
+            try:
+                save["applications"][k]["volumes"][default_sink_input] = vol
+                save["applications"][k]["application.name"] = proplist["application.name"]
+                save["applications"][k]["application.process.binary"] = proplist["application.process.binary"]
+            except KeyError:
+                # no data for application
+                save["applications"][k] = {
+                    "volumes": {default_sink_input : vol},
+                    "application.name" : proplist["application.name"],
+                    "application.process.binary" : proplist["application.process.binary"]
+                    }
 
     save["last_default_sink"] = default_sink_input
 
