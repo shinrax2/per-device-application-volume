@@ -129,6 +129,8 @@ class PDAVGui():
         }
 
         self._is_user_service_installed = os.path.exists("/etc/systemd/user/pdav.service")
+        # setup window style
+        sg.change_look_and_feel("DarkGrey11")
     
     def load_save(self):
         default_sink_input = self.pa_client.server_info().default_sink_name
@@ -188,7 +190,7 @@ class PDAVGui():
     
     def _user_service_menu(self):
         layout = [
-            [sg.Text(f"PDAV systemd user service installed: {"YES" if self._is_user_service_installed == True else "NO"}")],
+            [sg.Text(f"PDAV systemd user service installed: {"Yes" if self._is_user_service_installed == True else "No"}")],
             [
                 sg.Button("Start service", key="start_service", size=(15, 1)),
                 sg.Button("Stop service", key="stop_service", size=(15, 1)),
@@ -250,7 +252,9 @@ class PDAVGui():
         keys = []
         for sink in self.pa_client.sink_list():
             keys.append(f"dev_ignore_{sink.name}")
-            layout.append([sg.Checkbox("", key=f"dev_ignore_{sink.name}", default=True if sink.name in save["ignores"]["devices"] else False, enable_events=True), sg.Text(f"{sink.description} ({sink.name})")])
+            layout.append(
+                [sg.Checkbox("", key=f"dev_ignore_{sink.name}", default=True if sink.name in save["ignores"]["devices"] else False, enable_events=True), sg.Text(f"{sink.description} ({sink.name})")]
+            )
         layout.append(
             [sg.Button("Save device ignores", key="save", size=(15, 1)), sg.Button("Exit", key="Exit", size=(15, 1))]
         )
@@ -287,13 +291,17 @@ class PDAVGui():
             ]
             keys = {}
             for k, v in save["ignores"]["applications"].items():
-                layout.append([sg.Checkbox("", default=True, key=f"app_ignore_{k}", enable_events=True), sg.Text(f"{v["application.name"]} ({v["application.process.binary"]})")])
+                layout.append(
+                    [sg.Checkbox("", default=True, key=f"app_ignore_{k}", enable_events=True), sg.Text(f"{v["application.name"]} ({v["application.process.binary"]})")]
+                )
                 keys[f"app_ignore_{k}"] = v
             for sink in self.pa_client.sink_input_list():
                 proplist = apply_quirks(sink.proplist)
                 k = ident(proplist)
                 if k not in save["ignores"]["applications"].keys():
-                    layout.append([sg.Checkbox("", default=False, key=f"app_ignore_{k}", enable_events=True), sg.Text(f"{proplist["application.name"]} ({proplist["application.process.binary"]})")])
+                    layout.append(
+                        [sg.Checkbox("", default=False, key=f"app_ignore_{k}", enable_events=True), sg.Text(f"{proplist["application.name"]} ({proplist["application.process.binary"]})")]
+                    )
                     keys[f"app_ignore_{k}"] = {
                         "application.name" : proplist["application.name"],
                         "application.process.binary" : proplist["application.process.binary"]
