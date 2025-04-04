@@ -2,7 +2,38 @@ Per Device Application Volume
 
 small user daemon to automatically change application volume based on default output device
 
-installtion (arch linux): use yay or any other AUR helper of your choice
+requirements:
+pulseaudio/pipewire-pulse audioserver
+python3
+python3-pulsectl
+python3-pyinstaller
+python3-FreeSimpleGUI
+systemd
+
+installation (manual):
+1. clone git repo
+  git clone https://github.com/shinrax2/per-device-application-volume pdav
+  cd pdav
+2. build pdav-gui
+  python3 -m venv .venv
+  .venv/bin/python3 -m pip install -r requirements.txt
+  .venv/bin/python3 build-gui.py
+  cp dist/pdav-gui pdav-gui
+3. install requirements for daemon via your systems package manager
+  arch:
+    yay -S python-pulsectl
+4. copy everything to its place
+  sudo cp ./pdav /usr/bin/pdav
+  sudo cp ./pdav-gui /usr/bin/pdav
+  sudo mkdir /usr/share/pdav
+  sudo cp ./quirks.json /usr/share/pdav/quirks.json
+  sudo cp ./pdav.service /etc/systemd/user/pdav.service
+5. start pdav daemon
+  systemctl --user daemon-reload
+  systemctl --user --now enable pdav.service
+
+
+installtion (arch): use yay or any other AUR helper of your choice
 
 yay -S aur/pdav
 
