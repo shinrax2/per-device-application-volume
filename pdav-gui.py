@@ -15,6 +15,17 @@ import pulsectl # pip:pulsectl
 # local imports
 from pdav import get_save_file, get_quirks_file, apply_quirks, ident
 
+def get_data_dir_file(filename):
+    # search order: /usr/share/pdav/, ~/.local/share/pdav/, ./
+    if os.path.exists(os.path.join("/usr/share/pdav/", filename)) == True:
+        return os.path.join("/usr/share/pdav/", filename)
+    elif os.path.exists(os.path.join(os.path.expanduser("~/.local/share/pdav/"), filename)) == True:
+        return os.path.join(os.path.expanduser("~/.local/share/pdav/"), filename)
+    elif os.path.exists(filename) == True:
+        return filename
+    else:
+        return None
+
 def _signal_handler(sig, frame):
         sys.exit(0)
 
@@ -35,11 +46,12 @@ class PDAVGui():
         # setup signal handlers
         signal.signal(signal.SIGINT, _signal_handler)
         signal.signal(signal.SIGTERM, _signal_handler)
+        # use git version if possible
         if os.path.exists(os.path.join(os.path.dirname(__file__), ".git")) == True and shutil.which("git") is not None:
             self.__VERSION__ = subprocess.Popen(["bash", "-c", "git describe --long --tags"], stdout=subprocess.PIPE).communicate()[0].decode("utf8")
         self.pa_client = pulsectl.Pulse("pdav-gui")
         self.save_file = get_save_file()
-        self.iconpath = "images/icon-64x64.png"
+        self.iconpath = get_data_dir_file("images/icon-64x64.png")
         self.default_save = {
             "applications" : {},
             "ignores" : {

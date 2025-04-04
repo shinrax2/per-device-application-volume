@@ -41,6 +41,7 @@ usage:
 
 configure your application volume like you normally would and have the volume saved based on default output device
 when changing default output device PDAV will automatically adjust the volume
+use pdav-gui to manage the user service and device/application ignores
 
 ENVIORMENT variables:
 PDAV_CONFIG_FILE=/path/to/your/pdav-config.json
