@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=pdav-gui
+Comment=pdav GUI configuration utility
+Exec=/usr/bin/pdav-gui
+Icon=/usr/share/pdav/images/icon-64x64.png
+Terminal=false
+Categories=Settings
+Hidden=false
