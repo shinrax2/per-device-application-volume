@@ -39,6 +39,7 @@ class PDAVGui():
             self.__VERSION__ = subprocess.Popen(["bash", "-c", "git describe --long --tags"], stdout=subprocess.PIPE).communicate()[0].decode("utf8")
         self.pa_client = pulsectl.Pulse("pdav-gui")
         self.save_file = get_save_file()
+        self.iconpath = "images/icon-64x64.png"
         self.default_save = {
             "applications" : {},
             "ignores" : {
@@ -86,7 +87,7 @@ class PDAVGui():
             [sg.Button("Manage application ignores", key="app_ignores", size=(25, 2))],
             [sg.Button("Exit", key="Exit", size=(25, 2))]
         ]
-        self.mainmenu = sg.Window(f"PDAV Gui {self.__VERSION__}", layout, finalize=True)
+        self.mainmenu = sg.Window(f"PDAV Gui {self.__VERSION__}", layout, finalize=True, icon=self.iconpath)
         while True:
             event, value = self.mainmenu.read()
             if event == "Exit":
@@ -120,7 +121,7 @@ class PDAVGui():
             [sg.Output(size=(80, 20), key="Out")],
             [sg.Button("Exit", key="Exit", size=(15, 1))]
         ]
-        self.userservicemenu = sg.Window(f"PDAV Gui :: systemd user service", layout, finalize=True)
+        self.userservicemenu = sg.Window(f"PDAV Gui :: systemd user service", layout, finalize=True, icon=self.iconpath)
         self.userservicemenu["refresh_service"].Update(disabled=(self._is_user_service_installed == False))
         self.userservicemenu["restart_service"].Update(disabled=(self._is_user_service_installed == False))
         self.userservicemenu["start_service"].Update(disabled=(self._is_user_service_installed == False))
@@ -178,7 +179,7 @@ class PDAVGui():
         layout.append(
             [sg.Button("Save device ignores", key="save", size=(15, 1)), sg.Button("Exit", key="Exit", size=(15, 1))]
         )
-        self.deviceignoresmenu = sg.Window(f"PDAV Gui :: device ignores", layout, finalize=True)
+        self.deviceignoresmenu = sg.Window(f"PDAV Gui :: device ignores", layout, finalize=True, icon=self.iconpath)
         while True:
             event, value = self.deviceignoresmenu.read()
             self.deviceignoresmenu["status"].Update("")
@@ -226,7 +227,7 @@ class PDAVGui():
                         "application.name" : proplist["application.name"],
                         "application.process.binary" : proplist["application.process.binary"]
                     }
-            self.applicationignoresmenu = sg.Window(f"PDAV Gui :: application ignores", layout, finalize=True)
+            self.applicationignoresmenu = sg.Window(f"PDAV Gui :: application ignores", layout, finalize=True, icon=self.iconpath)
             while True:
                 event, value = self.applicationignoresmenu.read()
                 self.applicationignoresmenu["status"].Update("")
