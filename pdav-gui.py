@@ -21,7 +21,7 @@ def call(cmd):
     return subprocess.Popen(cmd, stdout=subprocess.PIPE).communicate()[0].decode("utf8")
 
 class PDAVGui():
-    __VERSION__ = "0.1.0"
+    __VERSION__ = "0.2.0"
     __CALLS__ = {
         "status" : ["systemctl", "--user", "status", "pdav.service"],
         "reload" : ["systemctl", "--user", "daemon-reload"],
