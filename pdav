@@ -16,6 +16,8 @@ import subprocess
 import pulsectl # pip:pulsectl
 
 __VERSION__  = "0.2.0"
+if os.path.exists(os.path.join(os.path.dirname(__file__), ".git")) == True and shutil.which("git") is not None:
+    __VERSION__ = subprocess.Popen(["bash", "-c", "git describe --long --tags"], stdout=subprocess.PIPE).communicate()[0].decode("utf8")
 
 def get_save_file():
     try:
@@ -205,9 +207,6 @@ def main():
     print("[PDAV] this tool is in an very early version, please report any issues you encounter to https://github.com/shinrax2/per-device-application-volume")
     print(f"[PDAV] save file: {os.path.abspath(get_save_file())}")
     print(f"[PDAV] quirks file: {os.path.abspath(get_quirks_file())}")
-    if os.path.exists(os.path.join(os.path.dirname(__file__), ".git")) == True and shutil.which("git") is not None:
-        gitver = subprocess.Popen(["bash", "-c", "git describe --long --tags"], stdout=subprocess.PIPE).communicate()[0].decode("utf8")
-        print(f"[PDAV] found git version: {gitver}")
 
     with pulsectl.Pulse("per-device-application-volume_listener") as pulse:
         # setup pulsectl event settings

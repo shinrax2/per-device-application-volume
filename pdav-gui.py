@@ -6,6 +6,7 @@ import sys
 import subprocess
 import os
 import json
+import shutil
 
 # pip package imports
 import FreeSimpleGUI as sg # pip:FreeSimpleGui
@@ -34,6 +35,8 @@ class PDAVGui():
         # setup signal handlers
         signal.signal(signal.SIGINT, _signal_handler)
         signal.signal(signal.SIGTERM, _signal_handler)
+        if os.path.exists(os.path.join(os.path.dirname(__file__), ".git")) == True and shutil.which("git") is not None:
+            self.__VERSION__ = subprocess.Popen(["bash", "-c", "git describe --long --tags"], stdout=subprocess.PIPE).communicate()[0].decode("utf8")
         self.pa_client = pulsectl.Pulse("pdav-gui")
         self.save_file = get_save_file()
         self.default_save = {
@@ -175,7 +178,7 @@ class PDAVGui():
         layout.append(
             [sg.Button("Save device ignores", key="save", size=(15, 1)), sg.Button("Exit", key="Exit", size=(15, 1))]
         )
-        self.deviceignoresmenu = sg.Window(f"PDAV Gui :: devices ignores", layout, finalize=True)
+        self.deviceignoresmenu = sg.Window(f"PDAV Gui :: device ignores", layout, finalize=True)
         while True:
             event, value = self.deviceignoresmenu.read()
             self.deviceignoresmenu["status"].Update("")
