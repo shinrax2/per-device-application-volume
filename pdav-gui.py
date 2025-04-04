@@ -5,102 +5,20 @@ import signal
 import sys
 import subprocess
 import os
-import hashlib
-import copy
 import json
 
 # pip package imports
 import FreeSimpleGUI as sg # pip:FreeSimpleGui
 import pulsectl # pip:pulsectl
 
+# local imports
+from pdav import get_save_file, get_quirks_file, apply_quirks, ident
+
 def _signal_handler(sig, frame):
         sys.exit(0)
 
 def call(cmd):
     return subprocess.Popen(cmd, stdout=subprocess.PIPE).communicate()[0].decode("utf8")
-
-def get_save_file():
-    try:
-        if os.path.exists(os.environ["PDAV_CONFIG_FILE"]):
-            print(f"[PDAV] using config file 'PDAV_CONFIG_FILE' ({os.environ["PDAV_CONFIG_FILE"]})")
-            return os.environ["PDAV_CONFIG_FILE"]
-        else:
-            print(f"[PDAV] file supplied in 'PDAV_CONFIG_FILE' ({os.environ["PDAV_CONFIG_FILE"]}) does not exist")
-    except KeyError:
-        pass
-    filename = "pdav-config.json"
-    if os.path.exists(os.path.expanduser("~/.config")) == True:
-        return os.path.join(os.path.expanduser("~/.config"), filename)
-
-def get_quirks_file():
-    try:
-        if os.path.exists(os.environ["PDAV_QUIRKS_FILE"]):
-            print(f"[PDAV] using QUIRKS file 'PDAV_QUIRKS_FILE' ({os.environ["PDAV_QUIRKS_FILE"]})")
-            return os.environ["PDAV_QUIRKS_FILE"]
-        else:
-            print(f"[PDAV] file supplied in 'PDAV_QUIRKS_FILE' ({os.environ["PDAV_QUIRKS_FILE"]}) does not exist")
-    except KeyError:
-        pass
-    filename = "quirks.json"
-    # search order: /usr/share/pdav/, ~/.local/share/pdav/, ./
-    if os.path.exists(os.path.join("/usr/share/pdav/", filename)) == True:
-        return os.path.join("/usr/share/pdav/", filename)
-    elif os.path.exists(os.path.join(os.path.expanduser("~/.local/share/pdav/"), filename)) == True:
-        return os.path.join(os.path.expanduser("~/.local/share/pdav/"), filename)
-    return filename
-
-
-def apply_quirks(proplist):
-    quirks_file = get_quirks_file()
-    quirks = []
-    clone_prop = copy.deepcopy(proplist)
-    with open(quirks_file, "r", encoding="utf8") as f:
-        try:
-                quirks = json.loads(f.read())
-        except json.JSONDecodeError:
-            print(f"[PDAV] cant parse quirks file '{quirks_file}'")
-    for quirk in quirks:
-        execute = False
-        cond_count = 1
-        # check conditions
-        for cond in quirk["conditions"]:
-            met = False
-
-            if cond["type"] == "contains":
-                try:
-                    if cond["data"] in proplist[cond["target"]]:
-                        met = True
-                except KeyError:
-                    pass
-            elif cond["type"] == "match":
-                try:
-                    if cond["data"] == proplist[cond["target"]]:
-                        met = True
-                except KeyError:
-                    pass
-
-            if met == True:
-                if quirk["condition_type"].lower() == "and":
-                    cond_count += 1
-                    if cond_count == len(quirk["conditions"]):
-                        execute = True
-                        break
-                elif quirk["condition_type"].lower() == "or":
-                    execute = True
-                    break
-        if execute == True:
-            for exe in quirk["execute"]:
-                if exe["type"] == "replace":
-                    clone_prop[exe["target"]] = exe["data"]
-    
-    return clone_prop
-
-def ident(proplist):
-        ident = hashlib.shake_128()
-        ident.update(proplist["application.name"].encode("utf-8"))
-        ident.update(proplist["application.process.binary"].encode("utf-8"))
-        return ident.hexdigest(16)
-
 
 class PDAVGui():
     __VERSION__ = "0.1.0"

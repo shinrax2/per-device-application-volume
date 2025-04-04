@@ -1,5 +1,12 @@
+# python stuff
 __pycache__/
+.venv/
+dist/
+build/
+*.spec
+
+# project stuff
 TODO
 pdav-config.json
-.venv/
 test
+pdav.py
