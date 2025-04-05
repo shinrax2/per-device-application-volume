@@ -32,6 +32,72 @@ def _signal_handler(sig, frame):
 def call(cmd):
     return subprocess.Popen(cmd, stdout=subprocess.PIPE).communicate()[0].decode("utf8")
 
+class l10n():
+    __SUPPORTED_LANGS__ = ["en", "de"]
+
+    def __init__(self, fallback_language="en"):
+        self.lang_files = {}
+        self.fallback_language = fallback_language
+        self.language = fallback_language
+        self._lang = {}
+        self._fallback_lang = {}
+        self.fallback = False
+        # get language files
+        self._get_language_files()
+        # get user language
+        self.user_language = self._get_user_language()
+        # load language files
+        if self.user_language != self.fallback_language and self.user_language in self.__SUPPORTED_LANGS__ and self.user_language in self.lang_files.keys():
+            self._lang = self._load_language_file(f"l10n/{self.user_language}.json")
+            self._fallback_lang = self._load_language_file(f"l10n/{self.fallback_language}.json")
+            self.language = self.user_language
+        else:
+            self._lang = self._load_language_file(f"l10n/{self.fallback_language}.json")
+            self._fallback_lang = self._lang
+            self.fallback = True
+
+    
+    def _get_language_files(self):
+        for lang in self.__SUPPORTED_LANGS__:
+            file = get_data_dir_file(f"l10n/{lang}.json")
+            if file is not None:
+                self.lang_files[lang] = file
+    
+    def _get_user_language(self):
+        try:
+            if os.environ["LANG"] != "":
+                return os.environ["LANG"][:2].lower()
+            else:
+                return self.fallback_language
+        except KeyError:
+            return self.fallback_language
+    
+    def _load_language_file(self, file):
+        if os.path.exists(file) == True:
+            with open(file, "r", encoding="utf8") as f:
+                try:
+                    return json.loads(f.read())
+                except json.JSONDecodeError:
+                    return {}
+    
+    def get_string(self, key):
+        s_fb = None
+        try:
+            s_fb = self._fallback_lang[key]
+        except KeyError: # key not found -> ERROR
+            return f"ERROR: '{key}' not found!"
+        if self.fallback == True and s_fb is not None:
+            return s_fb["string"]
+        try:
+            s = self._lang[key]
+        except KeyError: # key not found in lang -> fallback_lang
+            if s_fb is not None:
+                return s_fb["string"]
+        if s["version"] < s_fb["version"]:
+            return s_fb["string"] # string version lower in lang -> fallback_lang
+        else:
+            return s["string"] # everything alright -> lang 
+
 class PDAVGui():
     __VERSION__ = "0.2.0"
     __CALLS__ = {
@@ -52,6 +118,7 @@ class PDAVGui():
         self.pa_client = pulsectl.Pulse("pdav-gui")
         self.save_file = get_save_file()
         self.iconpath = get_data_dir_file("images/icon-64x64.png")
+        self.l10n = l10n()
         self.default_save = {
             "applications" : {},
             "ignores" : {
@@ -75,7 +142,7 @@ class PDAVGui():
                 try:
                     save = json.loads(f.read())
                 except json.JSONDecodeError:
-                    print(f"[PDAV] cant parse json save file '{self.save_file}'")
+                    pass
         try:
             save["ignores"]
         except KeyError:
@@ -94,12 +161,14 @@ class PDAVGui():
 
     def _main_menu(self):
         layout = [
-            [sg.Button("Manage systemd user service", key="user_service", size=(25, 2))],
-            [sg.Button("Manage device ignores", key="device_ignores", size=(25, 2))],
-            [sg.Button("Manage application ignores", key="app_ignores", size=(25, 2))],
-            [sg.Button("Exit", key="Exit", size=(25, 2))]
+            [sg.Image(source=get_data_dir_file("images/icon-128x128.png"), size=(200, 128))],
+            [sg.Text(f'{self.l10n.get_string("gui_version")}: {self.__VERSION__}', justification="center", expand_x=True)],
+            [sg.Button(self.l10n.get_string("gui_mainmenu_userservice_btn"), key="user_service", size=(25, 2))],
+            [sg.Button(self.l10n.get_string("gui_mainmenu_devignores_btn"), key="device_ignores", size=(25, 2))],
+            [sg.Button(self.l10n.get_string("gui_mainmenu_appignores_btn"), key="app_ignores", size=(25, 2))],
+            [sg.Button(self.l10n.get_string("gui_exit"), key="Exit", size=(25, 2))]
         ]
-        self.mainmenu = sg.Window(f"PDAV Gui {self.__VERSION__}", layout, finalize=True, icon=self.iconpath)
+        self.mainmenu = sg.Window(self.l10n.get_string("gui_mainmenu_title"), layout, finalize=True, icon=self.iconpath)
         while True:
             event, value = self.mainmenu.read()
             if event == "Exit":
@@ -123,17 +192,17 @@ class PDAVGui():
     
     def _user_service_menu(self):
         layout = [
-            [sg.Text(f"PDAV systemd user service installed: {"Yes" if self._is_user_service_installed == True else "No"}")],
+            [sg.Text(self.l10n.get_string("gui_userservicemenu_serviceinstalled_text").format(self.l10n.get_string('gui_yes') if self._is_user_service_installed == True else self.l10n.get_string('gui_no')))],
             [
-                sg.Button("Start service", key="start_service", size=(15, 1)),
-                sg.Button("Stop service", key="stop_service", size=(15, 1)),
-                sg.Button("Restart service", key="restart_service", size=(15, 1)),
-                sg.Button("Refresh status", key="refresh_service", size=(15, 1))
+                sg.Button(self.l10n.get_string("gui_userservicemenu_startservice_btn"), key="start_service", size=(15, 1)),
+                sg.Button(self.l10n.get_string("gui_userservicemenu_stopservice_btn"), key="stop_service", size=(15, 1)),
+                sg.Button(self.l10n.get_string("gui_userservicemenu_restartservice_btn"), key="restart_service", size=(15, 1)),
+                sg.Button(self.l10n.get_string("gui_userservicemenu_refreshstatus_btn"), key="refresh_service", size=(15, 1))
             ],
             [sg.Output(size=(80, 20), key="Out")],
-            [sg.Button("Exit", key="Exit", size=(15, 1))]
+            [sg.Button(self.l10n.get_string("gui_back"), key="Exit", size=(15, 1))]
         ]
-        self.userservicemenu = sg.Window(f"PDAV Gui :: systemd user service", layout, finalize=True, icon=self.iconpath)
+        self.userservicemenu = sg.Window(self.l10n.get_string("gui_userservicemenu_title"), layout, finalize=True, icon=self.iconpath)
         self.userservicemenu["refresh_service"].Update(disabled=(self._is_user_service_installed == False))
         self.userservicemenu["restart_service"].Update(disabled=(self._is_user_service_installed == False))
         self.userservicemenu["start_service"].Update(disabled=(self._is_user_service_installed == False))
@@ -153,34 +222,34 @@ class PDAVGui():
                 break
             if event == "refresh_service":
                 self.userservicemenu["Out"].Update("")
-                print("PDAV systemd user service status:\n")
+                print(self.l10n.get_string("gui_userservicemenu_status_line"))
                 print(call(self.__CALLS__["status"]))
             if event == "start_service":
                 self.userservicemenu["Out"].Update("")
-                print("PDAV systemd user service starting:\n")
+                print(self.l10n.get_string("gui_userservicemenu_start_line"))
                 print(call(self.__CALLS__["reload"]))
                 print(call(self.__CALLS__["start"]))
-                print("PDAV systemd user service status:\n")
+                print(self.l10n.get_string("gui_userservicemenu_status_line"))
                 print(call(self.__CALLS__["status"]))
             if event == "restart_service":
                 self.userservicemenu["Out"].Update("")
-                print("PDAV systemd user service restarting:\n")
+                print(self.l10n.get_string("gui_userservicemenu_restart_line"))
                 print(call(self.__CALLS__["reload"]))
                 print(call(self.__CALLS__["restart"]))
-                print("PDAV systemd user service status:\n")
+                print(self.l10n.get_string("gui_userservicemenu_status_line"))
                 print(call(self.__CALLS__["status"]))
             if event == "stop_service":
                 self.userservicemenu["Out"].Update("")
-                print("PDAV systemd user service stopping:\n")
+                print(self.l10n.get_string("gui_userservicemenu_stop_line"))
                 print(call(self.__CALLS__["stop"]))
-                print("PDAV systemd user service status:\n")
+                print(self.l10n.get_string("gui_userservicemenu_status_line"))
                 print(call(self.__CALLS__["status"]))
 
     def _device_ignores_menu(self):
         save = self.load_save()
         layout = [
             [sg.Text("", key="status")],
-            [sg.Text("Ignored Devices:")]
+            [sg.Text(self.l10n.get_string("gui_devignoresmenu_ignoreddevices_text"))]
         ]
         keys = []
         for sink in self.pa_client.sink_list():
@@ -189,9 +258,9 @@ class PDAVGui():
                 [sg.Checkbox("", key=f"dev_ignore_{sink.name}", default=True if sink.name in save["ignores"]["devices"] else False, enable_events=True), sg.Text(f"{sink.description} ({sink.name})")]
             )
         layout.append(
-            [sg.Button("Save device ignores", key="save", size=(15, 1)), sg.Button("Exit", key="Exit", size=(15, 1))]
+            [sg.Button(self.l10n.get_string("gui_devignoresmenu_save_btn"), key="save", size=(30, 1)), sg.Button(self.l10n.get_string("gui_back"), key="Exit", size=(30, 1))]
         )
-        self.deviceignoresmenu = sg.Window(f"PDAV Gui :: device ignores", layout, finalize=True, icon=self.iconpath)
+        self.deviceignoresmenu = sg.Window(self.l10n.get_string("gui_devignoresmenu_title"), layout, finalize=True, icon=self.iconpath)
         while True:
             event, value = self.deviceignoresmenu.read()
             self.deviceignoresmenu["status"].Update("")
@@ -210,7 +279,7 @@ class PDAVGui():
                 save["ignores"]["devices"] = new_dev
                 with open(self.save_file, "w", encoding="utf8") as f:
                     f.write(json.dumps(save, indent=4, ensure_ascii=False))
-                self.deviceignoresmenu["status"].Update("Device ignores saved!")
+                self.deviceignoresmenu["status"].Update(self.l10n.get_string("gui_devignoresmenu_saved_text"))
     
     def _application_ignores_menu(self):
         run = True
@@ -218,9 +287,9 @@ class PDAVGui():
             save = self.load_save()
             layout = [
                 [sg.Text("", key="status")],
-                [sg.Text("Only Applications currently outputting audio or already on the application ignore list can be managed!")],
-                [sg.Button("Refresh applications", key="refresh_applications"), sg.Button("Save device ignores", key="save", size=(15, 1)), sg.Button("Exit", key="Exit", size=(15, 1))],
-                [sg.Text("Application ignores:")]
+                [sg.Text(self.l10n.get_string("gui_appignoresmenu_info_text"))],
+                [sg.Button(self.l10n.get_string("gui_appignoresmenu_refresh_btn"), key="refresh_applications", size=(30, 1)), sg.Button(self.l10n.get_string("gui_appignoresmenu_save_btn"), key="save", size=(30, 1)), sg.Button(self.l10n.get_string("gui_back"), key="Exit", size=(30, 1))],
+                [sg.Text(self.l10n.get_string("gui_appignoresmenu_appignores_text"))]
             ]
             keys = {}
             for k, v in save["ignores"]["applications"].items():
@@ -239,7 +308,7 @@ class PDAVGui():
                         "application.name" : proplist["application.name"],
                         "application.process.binary" : proplist["application.process.binary"]
                     }
-            self.applicationignoresmenu = sg.Window(f"PDAV Gui :: application ignores", layout, finalize=True, icon=self.iconpath)
+            self.applicationignoresmenu = sg.Window(self.l10n.get_string("gui_appignoresmenu_title"), layout, finalize=True, icon=self.iconpath)
             while True:
                 event, value = self.applicationignoresmenu.read()
                 self.applicationignoresmenu["status"].Update("")
@@ -263,7 +332,7 @@ class PDAVGui():
                     # write save to disk
                     with open(self.save_file, "w", encoding="utf8") as f:
                         f.write(json.dumps(save, indent=4, ensure_ascii=False))
-                    self.applicationignoresmenu["status"].Update("Application ignores saved!")
+                    self.applicationignoresmenu["status"].Update(self.l10n.get_string("gui_appignoresmenu_saved_text"))
 
 
 if __name__ == "__main__":

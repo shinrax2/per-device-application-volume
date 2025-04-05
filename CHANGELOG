@@ -1,5 +1,6 @@
 future release:
-add icon to pdav-gui
+add icon to pdav-gui and show it in main menu
+add l10n to pdav-gui (en, de; please contribute more if you can :) )
 
 0.2.0:
 add pdav-gui to ease configuration of user service, ignores, etc

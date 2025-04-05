@@ -1,0 +1,152 @@
+{
+    "__META__" : {
+        "language_short" : "en",
+        "language_name_english" : "English",
+        "language_name_native" : "English"
+    },
+    "gui_mainmenu_title" : {
+        "version" : 1,
+        "comment" : "",
+        "string"  : "pdav-gui" 
+    },
+    "gui_exit" : {
+        "version" : 1,
+        "comment" : "",
+        "string"  : "Exit" 
+    },
+    "gui_back" : {
+        "version" : 1,
+        "comment" : "",
+        "string"  : "Back" 
+    },
+    "gui_yes" : {
+        "version" : 1,
+        "comment" : "",
+        "string"  : "Yes" 
+    },
+    "gui_no" : {
+        "version" : 1,
+        "comment" : "",
+        "string"  : "No" 
+    },
+    "gui_version" : {
+        "version" : 1,
+        "comment" : "",
+        "string"  : "Version"
+    },
+    "gui_mainmenu_userservice_btn" : {
+        "version" : 1,
+        "comment" : "",
+        "string"  : "Manage PDAV systemd user service" 
+    },
+    "gui_mainmenu_devignores_btn" : {
+        "version" : 1,
+        "comment" : "",
+        "string"  : "Manage device ignores" 
+    },
+    "gui_mainmenu_appignores_btn" : {
+        "version" : 1,
+        "comment" : "",
+        "string"  : "Manage application ignores" 
+    },
+    "gui_userservicemenu_serviceinstalled_text" : {
+        "version" : 1,
+        "comment" : "0: self.l10n.get_string('gui_yes') if self._is_user_service_installed == True else self.l10n.get_string('gui_no')",
+        "string"  : "PDAV systemd user service installed: {0}" 
+    },
+    "gui_userservicemenu_startservice_btn" : {
+        "version" : 1,
+        "comment" : "",
+        "string"  : "Start service" 
+    },
+    "gui_userservicemenu_stopservice_btn" : {
+        "version" : 1,
+        "comment" : "",
+        "string"  : "Stop service" 
+    },
+    "gui_userservicemenu_restartservice_btn" : {
+        "version" : 1,
+        "comment" : "",
+        "string"  : "Restart service" 
+    },
+    "gui_userservicemenu_refreshstatus_btn" : {
+        "version" : 1,
+        "comment" : "",
+        "string"  : "Refresh status" 
+    },
+    "gui_userservicemenu_title" : {
+        "version" : 1,
+        "comment" : "",
+        "string"  : "pdav-gui :: systemd user service" 
+    },
+    "gui_userservicemenu_status_line" : {
+        "version" : 1,
+        "comment" : "",
+        "string"  : "PDAV systemd user service status:\n" 
+    },
+    "gui_userservicemenu_start_line" : {
+        "version" : 1,
+        "comment" : "",
+        "string"  : "PDAV systemd user service starting:\n" 
+    },
+    "gui_userservicemenu_stop_line" : {
+        "version" : 1,
+        "comment" : "",
+        "string"  : "PDAV systemd user service stopping:\n" 
+    },
+    "gui_userservicemenu_restart_line" : {
+        "version" : 1,
+        "comment" : "",
+        "string"  : "PDAV systemd user service restarting:\n" 
+    },
+    "gui_devignoresmenu_ignoreddevices_text" : {
+        "version" : 1,
+        "comment" : "",
+        "string"  : "Ignored Devices:" 
+    },
+    "gui_devignoresmenu_save_btn" : {
+        "version" : 1,
+        "comment" : "",
+        "string"  : "Save device ignores" 
+    },
+    "gui_devignoresmenu_title" : {
+        "version" : 1,
+        "comment" : "",
+        "string"  : "pdav-gui :: device ignores" 
+    },
+    "gui_devignoresmenu_saved_text" : {
+        "version" : 1,
+        "comment" : "",
+        "string"  : "Device ignores saved!"
+    },
+    "gui_appignoresmenu_info_text" : {
+        "version" : 1,
+        "comment" : "",
+        "string"  : "Only Applications currently outputting audio or already on the application ignore list can be managed!" 
+    },
+    "gui_appignoresmenu_refresh_btn" : {
+        "version" : 1,
+        "comment" : "",
+        "string"  : "Refresh applications" 
+    },
+    "gui_appignoresmenu_save_btn" : {
+        "version" : 1,
+        "comment" : "",
+        "string"  : "Save application ignores" 
+    },
+    "gui_appignoresmenu_title" : {
+        "version" : 1,
+        "comment" : "",
+        "string"  : "pdav-gui :: application ignores" 
+    },
+    "gui_appignoresmenu_appignores_text" : {
+        "version" : 1,
+        "comment" : "",
+        "string"  : "Application ignores:" 
+    },
+    "gui_appignoresmenu_saved_text" : {
+        "version" : 1,
+        "comment" : "",
+        "string"  : "Application ignores saved!" 
+    }
+}
