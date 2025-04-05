@@ -24,9 +24,11 @@ installation (manual):
     yay -S python-pulsectl
 4. copy everything to its place
   sudo cp ./pdav /usr/bin/pdav
-  sudo cp ./pdav-gui /usr/bin/pdav
+  sudo cp ./pdav-gui /usr/bin/pdav-gui
   sudo mkdir /usr/share/pdav
   sudo cp ./quirks.json /usr/share/pdav/quirks.json
+  sudo cp ./images /usr/share/pdav/
+  sudo cp ./l10n /usr/share/pdav/
   sudo cp ./pdav.service /etc/systemd/user/pdav.service
 5. start pdav daemon
   systemctl --user daemon-reload
